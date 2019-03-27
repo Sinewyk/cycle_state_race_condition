@@ -1,11 +1,23 @@
 {
-  "name": "cycle_state_race_condition",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
-  "dependencies": {
-    "@cycle/run": "^5.2.0",
-    "@cycle/state": "^1.2.0",
-    "xstream": "^11.10.0"
-  }
+	"name": "cycle_state_race_condition",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "MIT",
+	"scripts": {
+		"test": "node index.js"
+	},
+	"dependencies": {
+		"@cycle/isolate": "^5.0.0",
+		"@cycle/run": "^5.2.0",
+		"@cycle/state": "^1.2.0",
+		"@cycle/time": "^0.19.0",
+		"xstream": "^11.10.0"
+	},
+	"devDependencies": {
+		"prettier": "^1.16.4"
+	},
+	"prettier": {
+		"useTabs": true,
+		"singleQuote": true
+	}
 }
