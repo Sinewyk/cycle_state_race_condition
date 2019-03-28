@@ -11,25 +11,37 @@ const drivers = {
 	time: timeDriver
 };
 
+const split = (whatToSplit, stream) =>
+	stream
+		.map(x => x[whatToSplit])
+		.filter(x => !!x)
+		.flatten();
+
 function Atom(sources) {
 	const count$ = sources.time.periodic(1);
 
-	const reducer$ = count$
+	const toSplit$ = count$
 		.compose(sampleCombine(sources.state.stream))
-		.map(([time, state]) => prevState => {
-			if (prevState !== state) {
-				console.log('previous in reducer ?', prevState);
-				console.log('currently in outer', state);
-				throw new Error('race condition ?');
-			}
+		.map(([time, state]) => {
 			return {
-				...prevState,
-				time
+				console: xs.of(String(state.id)),
+				state: xs.of(prevState => {
+					if (prevState !== state) {
+						console.log('previous in reducer ?', prevState);
+						console.log('currently in outer', state);
+						throw new Error('race condition ?');
+					}
+					return {
+						...prevState,
+						time
+					};
+				})
 			};
 		});
 
 	return {
-		state: reducer$
+		state: split('state', toSplit$),
+		console: split('console', toSplit$)
 	};
 }
 
@@ -61,14 +73,16 @@ function main(sources) {
 	};
 }
 
-const { run, sources } = setup(withState(main), drivers);
+const { run } = setup(withState(main), drivers);
 
-sources.state.stream.debug().addListener({
-	next: () => {},
-	error: err => {
-		console.error(err);
-		process.exit(1);
-	}
-});
+const dispose = run();
 
-run();
+// Let's suppose that if we didn't have a race condition under 1 second
+// it won't ever happen ... not super proud of that proof but meh
+setTimeout(() => {
+	dispose();
+	// why is it not stopping here by the way
+	// all listeners should have been cleaned up
+	// we also got ourselves a memory leak :'( ?
+	process.exit(0);
+}, 1000);
